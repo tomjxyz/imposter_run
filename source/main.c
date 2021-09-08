@@ -39,18 +39,26 @@ void resetBlocks(Block *blocks, int arrSize) {
 }
 
 // Draw character
-// TODO: add true false for if dead
-void drawCrewmate(Point pos, u32 colour){
+void drawCrewmate(Point pos, u32 colour, bool dead){
 	int bodyW = scrHeight/12;
 	int bodyH = scrHeight/6;
 
-	// Body
-	GRRLIB_Rectangle(pos.x, pos.y, bodyW, bodyH, colour, true);
-	// Eye
-	GRRLIB_Rectangle(pos.x+5, pos.y+8, bodyW, scrHeight/16, EYES_COLOUR, true);
-	// Leg gap
-	GRRLIB_Rectangle(pos.x+(bodyW/2)-2, pos.y+(bodyH-20), 5, 20, 0x000000FF, true);
-
+	if (!dead) {
+		// Body
+		GRRLIB_Rectangle(pos.x, pos.y, bodyW, bodyH, colour, true);
+		// Eye
+		GRRLIB_Rectangle(pos.x+5, pos.y+8, bodyW, scrHeight/16, EYES_COLOUR, true);
+		// Leg gap
+		GRRLIB_Rectangle(pos.x+(bodyW/2)-2, pos.y+(bodyH-20), 5, 20, 0x000000FF, true);
+	} else {
+		// Body
+		GRRLIB_Rectangle(pos.x, pos.y+bodyH/2, bodyW, bodyH/2, colour, true);
+		// Bone
+		GRRLIB_Rectangle(pos.x+(bodyW/2)-4, pos.y+(bodyH/2)-20, 8, 20, 0xFFFFFFFF, true);
+		GRRLIB_Circle(pos.x+(bodyW/2), pos.y+(bodyH/2)-20, 8, 0xFFFFFFFF, true);
+		// Leg gap
+		GRRLIB_Rectangle(pos.x+(bodyW/2)-2, pos.y+((bodyH/2)+20), 5, 20, 0x000000FF, true);
+	}
 }
 
 void gameplay() {
@@ -69,8 +77,10 @@ void gameplay() {
 		velocity += GRAVITY;
 	}
 
+	// Move main character if jumping
 	imposterPos.y += velocity;
-	drawCrewmate(imposterPos, BODY_COLOUR);
+	// Draw main imposter
+	drawCrewmate(imposterPos, BODY_COLOUR, false);
 
 	// Floor
 	GRRLIB_Rectangle(0, (scrHeight/6)*5, scrWidth, (scrHeight/6)*5, 0xBABABAFF, true);
