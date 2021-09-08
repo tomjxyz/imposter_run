@@ -135,7 +135,7 @@ int main() {
 		if (pressed & WPAD_BUTTON_HOME)
 			break;
 		// Reset game after death
-		if (pressed & WPAD_BUTTON_PLUS && dead) {
+		if (pressed & WPAD_BUTTON_B && dead) {
 			dead = !dead;
 			resetBlocks(blocks, 4);
 		}
