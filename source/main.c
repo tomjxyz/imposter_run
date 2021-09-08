@@ -26,7 +26,7 @@ int scrHeight;
 Block blocks[10];
 
 // For character position and jump
-Point sus;
+Point imposterPos;
 int velocity;
 
 void resetBlocks(Block *blocks, int arrSize) {
@@ -38,13 +38,28 @@ void resetBlocks(Block *blocks, int arrSize) {
 	}
 }
 
+// Draw character
+// TODO: add true false for if dead
+void drawCrewmate(Point pos, u32 colour){
+	int bodyW = scrHeight/12;
+	int bodyH = scrHeight/6;
+
+	// Body
+	GRRLIB_Rectangle(pos.x, pos.y, bodyW, bodyH, colour, true);
+	// Eye
+	GRRLIB_Rectangle(pos.x+5, pos.y+8, bodyW, scrHeight/16, EYES_COLOUR, true);
+	// Leg gap
+	GRRLIB_Rectangle(pos.x+(bodyW/2)-2, pos.y+(bodyH-20), 5, 20, 0x000000FF, true);
+
+}
+
 void gameplay() {
     GRRLIB_FillScreen(0x000000FF);    // Clear the screen
 
 	// Test character
 
 	// If touching floor
-	if (sus.y+scrHeight/6 >= (scrHeight/6)*5) {
+	if (imposterPos.y+scrHeight/6 >= (scrHeight/6)*5) {
 		if (WPAD_ButtonsHeld(0) & WPAD_BUTTON_A)
 			velocity = -JUMP_SPEED; // Add upwards velocity when A pressed
 		else
@@ -54,10 +69,8 @@ void gameplay() {
 		velocity += GRAVITY;
 	}
 
-	sus.y += velocity;
-	// Draw character
-	GRRLIB_Rectangle(sus.x, sus.y, scrHeight/12, scrHeight/6, BODY_COLOUR, true);
-	GRRLIB_Rectangle(sus.x+5, sus.y+8, scrHeight/12, scrHeight/16, EYES_COLOUR, true);
+	imposterPos.y += velocity;
+	drawCrewmate(imposterPos, BODY_COLOUR);
 
 	// Floor
 	GRRLIB_Rectangle(0, (scrHeight/6)*5, scrWidth, (scrHeight/6)*5, 0xBABABAFF, true);
@@ -85,8 +98,8 @@ int main() {
 	WPAD_Init();
 	WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
 	
-	sus.x = scrWidth/5;
-	sus.y = (scrHeight/5)*3;
+	imposterPos.x = scrWidth/5;
+	imposterPos.y = (scrHeight/5)*3;
 	// Initial blocks
 	resetBlocks(blocks, 4);
 
