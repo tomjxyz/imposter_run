@@ -16,6 +16,7 @@ typedef struct {
 	int width;
 	int height;
 	int xpos;
+	int ypos;
 	int speed;
 } Block; 
 
@@ -25,9 +26,10 @@ int scrHeight;
 // For blocks to jump over
 Block blocks[10];
 
-// For character position and jump
+// Properties for main imposter
 Point imposterPos;
 int velocity;
+bool dead = false;
 
 void resetBlocks(Block *blocks, int arrSize) {
 	for (int i = 0; i < arrSize; i++) {
@@ -35,6 +37,7 @@ void resetBlocks(Block *blocks, int arrSize) {
 		blocks[i].height = scrHeight/8;
 		blocks[i].speed = 5;
 		blocks[i].xpos = scrWidth+blocks[i].width + ((scrWidth+blocks[i].width)/arrSize-1)*i;
+		blocks[i].ypos = ((scrHeight/6)*5)-blocks[i].height;
 	}
 }
 
@@ -68,8 +71,8 @@ void gameplay() {
 
 	// If touching floor
 	if (imposterPos.y+scrHeight/6 >= (scrHeight/6)*5) {
-		if (WPAD_ButtonsHeld(0) & WPAD_BUTTON_A)
-			velocity = -JUMP_SPEED; // Add upwards velocity when A pressed
+		if (WPAD_ButtonsHeld(0) & WPAD_BUTTON_A && !dead)
+			velocity = -JUMP_SPEED; // Add upwards velocity when A pressed and still alive
 		else
 			velocity = 0;
 	}
@@ -80,20 +83,28 @@ void gameplay() {
 	// Move main character if jumping
 	imposterPos.y += velocity;
 	// Draw main imposter
-	drawCrewmate(imposterPos, BODY_COLOUR, false);
+	drawCrewmate(imposterPos, BODY_COLOUR, dead);
 
 	// Floor
 	GRRLIB_Rectangle(0, (scrHeight/6)*5, scrWidth, (scrHeight/6)*5, 0xBABABAFF, true);
 
 	// Blocks to jump over
 	for (int i = 0; i < 4; i++) {
-		GRRLIB_Rectangle(blocks[i].xpos, ((scrHeight/6)*5)-blocks[i].height, blocks[i].width, blocks[i].height, 0xBABABAFF, true);
-		if (blocks[i].xpos < 0-blocks[i].width)
-			blocks[i].xpos = scrWidth;
-		else
-			blocks[i].xpos -= blocks[i].speed;
-	}
+		GRRLIB_Rectangle(blocks[i].xpos, blocks[i].ypos, blocks[i].width, blocks[i].height, 0x969696FF, true);
 
+		// If player hits a block
+		if (GRRLIB_RectOnRect(blocks[i].xpos, blocks[i].ypos, blocks[i].width, blocks[i].height,
+						      imposterPos.x, imposterPos.y, scrHeight/12, scrHeight/6)){
+			dead = true;
+		}
+
+		if (!dead) {
+			if (blocks[i].xpos < 0-blocks[i].width)
+				blocks[i].xpos = scrWidth;
+			else
+				blocks[i].xpos -= blocks[i].speed;
+		}
+	}
 }
 
 // Main entry point
@@ -123,6 +134,11 @@ int main() {
 		// If home pressed, exit
 		if (pressed & WPAD_BUTTON_HOME)
 			break;
+		// Reset game after death
+		if (pressed & WPAD_BUTTON_PLUS && dead) {
+			dead = !dead;
+			resetBlocks(blocks, 4);
+		}
 
 		// ------------ Place drawing code here -------------------
 		gameplay();
