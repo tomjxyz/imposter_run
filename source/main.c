@@ -93,8 +93,8 @@ void gameplay() {
 		GRRLIB_Rectangle(blocks[i].xpos, blocks[i].ypos, blocks[i].width, blocks[i].height, 0x969696FF, true);
 
 		// If player hits a block
-		if (GRRLIB_RectOnRect(blocks[i].xpos, blocks[i].ypos, blocks[i].width, blocks[i].height,
-						      imposterPos.x, imposterPos.y, scrHeight/12, scrHeight/6)){
+		if (GRRLIB_RectOnRect(imposterPos.x, imposterPos.y, scrHeight/12, scrHeight/6,
+							  blocks[i].xpos, blocks[i].ypos, blocks[i].width, blocks[i].height)) {
 			dead = true;
 		}
 
