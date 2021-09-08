@@ -7,16 +7,37 @@
 #define GRAVITY 1
 #define JUMP_SPEED 15
 
-int scrWidth;
-int scrHeight;
-
 typedef struct {
 	int x;
 	int y;
 } Point;
 
-int velocity;
+typedef struct {
+	int width;
+	int height;
+	int xpos;
+	int speed;
+} Block; 
+
+int scrWidth;
+int scrHeight;
+
+// For blocks to jump over
+Block blocks[10];
+
+// For character position and jump
 Point sus;
+int velocity;
+
+void resetBlocks(Block *blocks, int arrSize) {
+	for (int i = 0; i < arrSize; i++) {
+		blocks[i].width = scrHeight/16;
+		blocks[i].height = scrHeight/8;
+		blocks[i].speed = 5;
+		blocks[i].xpos = scrWidth+blocks[i].width + ((scrWidth+blocks[i].width)/arrSize-1)*i;
+	}
+}
+
 void gameplay() {
     GRRLIB_FillScreen(0x000000FF);    // Clear the screen
 
@@ -41,6 +62,15 @@ void gameplay() {
 	// Floor
 	GRRLIB_Rectangle(0, (scrHeight/6)*5, scrWidth, (scrHeight/6)*5, 0xBABABAFF, true);
 
+	// Blocks to jump over
+	for (int i = 0; i < 4; i++) {
+		GRRLIB_Rectangle(blocks[i].xpos, ((scrHeight/6)*5)-blocks[i].height, blocks[i].width, blocks[i].height, 0xBABABAFF, true);
+		if (blocks[i].xpos < 0-blocks[i].width)
+			blocks[i].xpos = scrWidth;
+		else
+			blocks[i].xpos -= blocks[i].speed;
+	}
+
 }
 
 // Main entry point
@@ -57,6 +87,8 @@ int main() {
 	
 	sus.x = scrWidth/5;
 	sus.y = (scrHeight/5)*3;
+	// Initial blocks
+	resetBlocks(blocks, 4);
 
 	// Game loop
 	while(1) {
