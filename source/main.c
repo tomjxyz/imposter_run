@@ -3,7 +3,7 @@
 #include <wiiuse/wpad.h>
 
 // Score font
-#define AMATIC_SIZE 146348
+#define FONT_SIZE 146348
 
 #define BODY_COLOUR 0xC71012FF
 #define EYES_COLOUR 0x95CADCFF
@@ -148,16 +148,16 @@ int main() {
   resetBlocks(blocks, 4);
 
   // Load in font
-  FILE *amaticFile = fopen("AmaticSC-Bold.ttf", "r");
+  FILE *fontFile = fopen("AmaticSC-Bold.ttf", "r");
 
-  char *amaticBuf = (char *)calloc(AMATIC_SIZE, sizeof(char));
+  char *fontBuf = (char *)calloc(FONT_SIZE, sizeof(char));
 
-  if (fread(amaticBuf, sizeof(char), AMATIC_SIZE, amaticFile) == -1) {
+  if (fread(fontBuf, sizeof(char), FONT_SIZE, fontFile) == -1) {
     GRRLIB_Exit();
     return -1;
   }
 
-  scoreFont = GRRLIB_LoadTTF(amaticBuf, AMATIC_SIZE);
+  scoreFont = GRRLIB_LoadTTF(fontBuf, FONT_SIZE);
   drawScore(0);
 
   // Game loop
