@@ -1,9 +1,9 @@
 #include <grrlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <wiiuse/wpad.h>
 
-// Score font
-#define FONT_SIZE 146348
+#include "font131.h"
 
 #define BODY_COLOUR 0xC71012FF
 #define EYES_COLOUR 0x95CADCFF
@@ -27,11 +27,12 @@ int scrWidth;
 int scrHeight;
 
 // Font
-GRRLIB_ttfFont *scoreFont;
+GRRLIB_bytemapFont *font;
 int score = 0;
 
 // For blocks to jump over
 Block blocks[10];
+bool pastBlock;
 
 // Properties for main imposter
 Point imposterPos;
@@ -79,10 +80,40 @@ void drawCrewmate(Point pos, u32 colour, bool dead) {
   }
 }
 
+void drawBlocks() {
+  // Blocks to jump over
+  for (int i = 0; i < 4; i++) {
+    GRRLIB_Rectangle(blocks[i].xpos, blocks[i].ypos, blocks[i].width,
+                     blocks[i].height, 0x969696FF, true);
+
+    // If player hits a block
+    if (GRRLIB_RectOnRect(imposterPos.x, imposterPos.y, scrHeight / 12,
+                          scrHeight / 6, blocks[i].xpos, blocks[i].ypos,
+                          blocks[i].width, blocks[i].height)) {
+      dead = true;
+    }
+
+    if (!dead) {
+      if (blocks[i].xpos < 0 - blocks[i].width) {
+        blocks[i].xpos = scrWidth;
+        pastBlock = true;
+      } else
+        blocks[i].xpos -= blocks[i].speed;
+    }
+    //    printf("pastBlock: %d", pastBlock);
+
+    if (blocks[i].xpos < imposterPos.x && pastBlock) {
+      ++score;
+      printf("Score: %d", score);
+      pastBlock = false;
+    }
+  }
+}
+
 void gameplay() {
   GRRLIB_FillScreen(0x000000FF); // Clear the screen
 
-  // Test character
+  drawScore(score);
 
   // If touching floor
   if (imposterPos.y + scrHeight / 6 >= (scrHeight / 6) * 5) {
@@ -100,43 +131,23 @@ void gameplay() {
   // Draw main imposter
   drawCrewmate(imposterPos, BODY_COLOUR, dead);
 
+  drawBlocks();
+
   // Floor
   GRRLIB_Rectangle(0, (scrHeight / 6) * 5, scrWidth, (scrHeight / 6) * 5,
                    0xBABABAFF, true);
-
-  // Blocks to jump over
-  for (int i = 0; i < 4; i++) {
-    GRRLIB_Rectangle(blocks[i].xpos, blocks[i].ypos, blocks[i].width,
-                     blocks[i].height, 0x969696FF, true);
-
-    // If player hits a block
-    if (GRRLIB_RectOnRect(imposterPos.x, imposterPos.y, scrHeight / 12,
-                          scrHeight / 6, blocks[i].xpos, blocks[i].ypos,
-                          blocks[i].width, blocks[i].height)) {
-      dead = true;
-    }
-
-    if (!dead) {
-      if (blocks[i].xpos < 0 - blocks[i].width)
-        blocks[i].xpos = scrWidth;
-      else
-        blocks[i].xpos -= blocks[i].speed;
-    }
-
-    if (blocks[i].xpos + blocks[i].width < imposterPos.x) {
-      ++score;
-      drawScore(score);
-    }
-  }
 }
 
 // Main entry point
 int main() {
+  printf("game start");
   // Initialise graphics library
   GRRLIB_Init();
 
   scrWidth = rmode->fbWidth;
   scrHeight = rmode->efbHeight;
+  // TODO: Find out why assigning this on global declaration dosent work
+  pastBlock = true;
 
   // Initialise WiiMotes
   WPAD_Init();
@@ -147,18 +158,8 @@ int main() {
   // Initial blocks
   resetBlocks(blocks, 4);
 
-  // Load in font
-  FILE *fontFile = fopen("AmaticSC-Bold.ttf", "r");
-
-  char *fontBuf = (char *)calloc(FONT_SIZE, sizeof(char));
-
-  if (fread(fontBuf, sizeof(char), FONT_SIZE, fontFile) == -1) {
-    GRRLIB_Exit();
-    return -1;
-  }
-
-  scoreFont = GRRLIB_LoadTTF(fontBuf, FONT_SIZE);
-  drawScore(0);
+  // Load font
+  font = GRRLIB_LoadBMF(font131);
 
   // Game loop
   while (1) {
@@ -173,6 +174,8 @@ int main() {
     // Reset game after death
     if (pressed & WPAD_BUTTON_B && dead) {
       dead = !dead;
+      score = 0;
+      pastBlock = true;
       resetBlocks(blocks, 4);
     }
 
@@ -187,8 +190,9 @@ int main() {
 }
 
 void drawScore(int score) {
-  char txtBuf[12];
-  snprintf(txtBuf, sizeof(txtBuf), "SCORE: %d", score);
-  GRRLIB_PrintfTTF(scrWidth / 10, scrHeight / 5, scoreFont, txtBuf, 20,
-                   0xFFFFFFFF);
+  // TODO: Move this out of draw method
+  char scoreS[18];
+  sprintf(scoreS, "SCORE %d", score);
+
+  GRRLIB_PrintBMF(10, 10, font, scoreS);
 }
