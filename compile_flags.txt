@@ -1,0 +1,2 @@
+-I/opt/devkitpro/libogc/include/
+-I/opt/devkitpro/portlibs/ppc/include
