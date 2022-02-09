@@ -1,6 +1,8 @@
+#include <fat.h>
 #include <grrlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <wiiuse/wpad.h>
 
 #include "font131.h"
@@ -9,6 +11,7 @@
 #define EYES_COLOUR 0x95CADCFF
 #define GRAVITY 1
 #define JUMP_SPEED 15
+#define SAVE_FN "sd:/sussy.sav"
 
 typedef struct {
     int x;
@@ -29,6 +32,7 @@ int scrHeight;
 // Font
 GRRLIB_bytemapFont *font;
 int score = 0;
+int hs = 0;
 char scoreS[18];
 
 // For blocks to jump over
@@ -117,6 +121,7 @@ void drawBlocks() {
 void gameplay() {
     GRRLIB_FillScreen(0x000000FF); // Clear the screen
 
+    sprintf(scoreS, "SCORE %d", score);
     GRRLIB_PrintBMF(10, 10, font, scoreS);
 
     // If touching floor
@@ -142,9 +147,39 @@ void gameplay() {
                      0xBABABAFF, true);
 }
 
+void initSave() {
+    printf("trying to init fs?");
+    if (fatInitDefault()) {
+        // Create save file if it does not exist and open for r+w
+        FILE *saveFile = fopen(SAVE_FN, "w+");
+        if (saveFile == NULL)
+            printf("Could not open save file");
+
+        // Check if score already exists
+        uint *hs_temp = malloc(sizeof(uint));
+        fread(hs_temp, sizeof(uint), 1, saveFile);
+        // If file not empty
+        if (feof(saveFile) == 0) {
+            hs = *hs_temp;
+            printf("Loaded HS: %d", hs);
+        }
+        free(hs_temp);
+        fclose(saveFile);
+    } else {
+        printf("Unable to initialise FAT subsystem, hs wont be saved.\n");
+    }
+}
+void setSave(uint score) {
+    FILE *saveFile = fopen(SAVE_FN, "w");
+    fwrite(&score, sizeof(uint), 1, saveFile);
+    fclose(saveFile);
+}
+
 // Main entry point
 int main() {
     printf("game start");
+    initSave();
+
     // Initialise graphics library
     GRRLIB_Init();
 
@@ -177,14 +212,21 @@ int main() {
             break;
         // Reset game after death
         if (pressed & WPAD_BUTTON_B && dead) {
+            printf("HS pre death: %d", hs);
             // Make player alive again
             dead = !dead;
+            // Set hs
+            if (score > hs) {
+                hs = score;
+                setSave(hs);
+            }
             // Reset score
             score = 0;
             sprintf(scoreS, "SCORE %d", score);
             // Reset blocks
             pastBlock = true;
             resetBlocks(blocks, 4);
+            printf("HS: %d", hs);
         }
 
         // ------------ Place drawing code here -------------------
@@ -193,6 +235,7 @@ int main() {
         GRRLIB_Render(); // Render frame buffer to tv
     }
 
+    fatUnmount(0);
     GRRLIB_Exit(); // Clear memory used by graphics lib
     return 0;      // Return no error
 }
