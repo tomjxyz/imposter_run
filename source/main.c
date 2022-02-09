@@ -29,6 +29,7 @@ int scrHeight;
 // Font
 GRRLIB_bytemapFont *font;
 int score = 0;
+char scoreS[18];
 
 // For blocks to jump over
 Block blocks[10];
@@ -106,6 +107,7 @@ void drawBlocks() {
 
         if (blocks[i].xpos < imposterPos.x && pastBlock) {
             ++score;
+            sprintf(scoreS, "SCORE %d", score);
             printf("Score: %d", score);
             pastBlock = false;
         }
@@ -115,7 +117,7 @@ void drawBlocks() {
 void gameplay() {
     GRRLIB_FillScreen(0x000000FF); // Clear the screen
 
-    drawScore(score);
+    GRRLIB_PrintBMF(10, 10, font, scoreS);
 
     // If touching floor
     if (imposterPos.y + scrHeight / 6 >= (scrHeight / 6) * 5) {
@@ -175,8 +177,12 @@ int main() {
             break;
         // Reset game after death
         if (pressed & WPAD_BUTTON_B && dead) {
+            // Make player alive again
             dead = !dead;
+            // Reset score
             score = 0;
+            sprintf(scoreS, "SCORE %d", score);
+            // Reset blocks
             pastBlock = true;
             resetBlocks(blocks, 4);
         }
@@ -189,12 +195,4 @@ int main() {
 
     GRRLIB_Exit(); // Clear memory used by graphics lib
     return 0;      // Return no error
-}
-
-void drawScore(int score) {
-    // TODO: Move this out of draw method
-    char scoreS[18];
-    sprintf(scoreS, "SCORE %d", score);
-
-    GRRLIB_PrintBMF(10, 10, font, scoreS);
 }

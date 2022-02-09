@@ -109,6 +109,8 @@ clean:
 run:
 	wiiload $(TARGET).dol
 
+emu:
+	dolphin-emu -b $(TARGET).elf
 
 #---------------------------------------------------------------------------------
 else
