@@ -1,7 +1,9 @@
+#include <dirent.h>
 #include <fat.h>
 #include <grrlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <wiiuse/wpad.h>
 
@@ -11,7 +13,7 @@
 #define EYES_COLOUR 0x95CADCFF
 #define GRAVITY 1
 #define JUMP_SPEED 15
-#define SAVE_FN "sd:/sussy.sav"
+#define SAVE_FN "sd:/imposter.sav"
 
 typedef struct {
     int x;
@@ -148,36 +150,47 @@ void gameplay() {
 }
 
 void initSave() {
-    printf("trying to init fs?");
-    if (fatInitDefault()) {
-        // Create save file if it does not exist and open for r+w
-        FILE *saveFile = fopen(SAVE_FN, "w+");
-        if (saveFile == NULL)
-            printf("Could not open save file");
+    // Create save file if it does not exist and open for r+w
+    FILE *saveFile = fopen(SAVE_FN, "rb");
+    if (saveFile == NULL)
+        printf("Could not open / create save file");
+    else
+        printf("Opened save file at %p", saveFile);
 
-        // Check if score already exists
-        uint *hs_temp = malloc(sizeof(uint));
-        fread(hs_temp, sizeof(uint), 1, saveFile);
-        // If file not empty
-        if (feof(saveFile) == 0) {
-            hs = *hs_temp;
-            printf("Loaded HS: %d", hs);
-        }
-        free(hs_temp);
-        fclose(saveFile);
+    // Check if score already exists
+    uint *hs_temp = malloc(sizeof(uint));
+    fread(hs_temp, sizeof(uint), 1, saveFile);
+    // If file not empty
+    if (feof(saveFile) == 0) {
+        hs = *hs_temp;
+        printf("Loaded HS: %d", hs);
     } else {
-        printf("Unable to initialise FAT subsystem, hs wont be saved.\n");
+        printf("Could find score in save file");
     }
+    free(hs_temp);
+    fclose(saveFile);
 }
+
 void setSave(uint score) {
-    FILE *saveFile = fopen(SAVE_FN, "w");
-    fwrite(&score, sizeof(uint), 1, saveFile);
+    FILE *saveFile = fopen(SAVE_FN, "wb");
+    if (saveFile != NULL)
+        printf("Opened save file for writing at %p", saveFile);
+    if (fwrite(&score, sizeof(uint), 1, saveFile) == 0)
+        printf("Error writing to save file.");
+    else
+        printf("Wrote score %d to save file", score);
+
     fclose(saveFile);
 }
 
 // Main entry point
 int main() {
     printf("game start");
+    if (!fatInitDefault()) {
+        printf("Could not init FAT fs!");
+    } else {
+        printf("Initialised FAT fs");
+    }
     initSave();
 
     // Initialise graphics library
