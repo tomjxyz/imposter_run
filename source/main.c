@@ -36,6 +36,7 @@ GRRLIB_bytemapFont *font;
 int score = 0;
 int hs = 0;
 char scoreS[18];
+char scoreHS[18];
 
 // For blocks to jump over
 Block blocks[10];
@@ -46,7 +47,8 @@ Point imposterPos;
 int velocity;
 bool dead = false;
 
-void drawScore(int score);
+void updateScore(int score, int hs);
+void setSave(uint score);
 
 void resetBlocks(Block *blocks, int arrSize) {
     for (int i = 0; i < arrSize; i++) {
@@ -112,10 +114,14 @@ void drawBlocks() {
         //    printf("pastBlock: %d", pastBlock);
 
         if (blocks[i].xpos < imposterPos.x && pastBlock) {
-            ++score;
-            sprintf(scoreS, "SCORE %d", score);
+            updateScore(++score, hs);
             printf("Score: %d", score);
             pastBlock = false;
+            // Set hs
+            if (score > hs) {
+                updateScore(score, score);
+                setSave(hs);
+            }
         }
     }
 }
@@ -123,8 +129,8 @@ void drawBlocks() {
 void gameplay() {
     GRRLIB_FillScreen(0x000000FF); // Clear the screen
 
-    sprintf(scoreS, "SCORE %d", score);
     GRRLIB_PrintBMF(10, 10, font, scoreS);
+    GRRLIB_PrintBMF(10, 32, font, scoreHS);
 
     // If touching floor
     if (imposterPos.y + scrHeight / 6 >= (scrHeight / 6) * 5) {
@@ -162,7 +168,7 @@ void initSave() {
     fread(hs_temp, sizeof(uint), 1, saveFile);
     // If file not empty
     if (feof(saveFile) == 0) {
-        hs = *hs_temp;
+        updateScore(0, *hs_temp);
         printf("Loaded HS: %d", hs);
     } else {
         printf("Could find score in save file");
@@ -181,6 +187,14 @@ void setSave(uint score) {
         printf("Wrote score %d to save file", score);
 
     fclose(saveFile);
+}
+
+void updateScore(int new_score, int new_hs) {
+    score = new_score;
+    sprintf(scoreS, "SCORE %d", score);
+
+    hs = new_hs;
+    sprintf(scoreHS, "BEST  %d", hs);
 }
 
 // Main entry point
@@ -228,14 +242,9 @@ int main() {
             printf("HS pre death: %d", hs);
             // Make player alive again
             dead = !dead;
-            // Set hs
-            if (score > hs) {
-                hs = score;
-                setSave(hs);
-            }
+
             // Reset score
-            score = 0;
-            sprintf(scoreS, "SCORE %d", score);
+            updateScore(0, hs);
             // Reset blocks
             pastBlock = true;
             resetBlocks(blocks, 4);
