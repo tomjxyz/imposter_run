@@ -117,11 +117,6 @@ void drawBlocks() {
             updateScore(++score, hs);
             printf("Score: %d", score);
             pastBlock = false;
-            // Set hs
-            if (score > hs) {
-                updateScore(score, score);
-                setSave(hs);
-            }
         }
     }
 }
@@ -240,12 +235,17 @@ int main() {
             // Make player alive again
             dead = !dead;
 
+            resetBlocks(blocks, 4);
+            // Set hs
+            if (score > hs) {
+                updateScore(score, score);
+                setSave(hs);
+            }
+            printf("HS: %d", hs);
             // Reset score
             updateScore(0, hs);
             // Reset blocks
             pastBlock = true;
-            resetBlocks(blocks, 4);
-            printf("HS: %d", hs);
         }
 
         // ------------ Place drawing code here -------------------
