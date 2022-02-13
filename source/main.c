@@ -156,25 +156,22 @@ void gameplay() {
 }
 
 void initSave() {
-    // Create save file if it does not exist and open for r+w
-    FILE *saveFile = fopen(SAVE_FN, "rb");
-    if (saveFile == NULL)
-        printf("Could not open / create save file");
-    else
+    // Check if save exists if not create it
+    if (access(SAVE_FN, F_OK) < 0) {
+        printf("Could not open / create save file, creating it.");
+        setSave(0);
+        updateScore(0, 0);
+    } else {
+        // Load score from file
+        FILE *saveFile = fopen(SAVE_FN, "rb");
         printf("Opened save file at %p", saveFile);
-
-    // Check if score already exists
-    uint *hs_temp = malloc(sizeof(uint));
-    fread(hs_temp, sizeof(uint), 1, saveFile);
-    // If file not empty
-    if (feof(saveFile) == 0) {
+        uint *hs_temp = malloc(sizeof(uint));
+        fread(hs_temp, sizeof(uint), 1, saveFile);
         updateScore(0, *hs_temp);
         printf("Loaded HS: %d", hs);
-    } else {
-        printf("Could find score in save file");
+        free(hs_temp);
+        fclose(saveFile);
     }
-    free(hs_temp);
-    fclose(saveFile);
 }
 
 void setSave(uint score) {
