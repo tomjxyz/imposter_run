@@ -41,10 +41,7 @@ int main() {
         if (pressed & WPAD_BUTTON_HOME)
             break;
         if (pressed & WPAD_BUTTON_PLUS) {
-            shiftColour(true);
-        }
-        if (pressed & WPAD_BUTTON_MINUS) {
-            shiftColour(false);
+            shiftColour();
         }
 
         // Reset game after death

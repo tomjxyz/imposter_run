@@ -26,7 +26,7 @@ void initGameplay();
 
 void gameplay();
 
-void shiftColour(bool forward);
+void shiftColour();
 
 void drawBlocks();
 

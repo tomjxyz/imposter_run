@@ -48,14 +48,9 @@ void resetBlocks(Block *blocks, int arrSize) {
     }
 }
 
-void shiftColour(bool forward) {
-    if (forward) {
-        ++currentColour;
-        currentColour %= (sizeof(colours) / sizeof(colours[0]));
-    } else {
-        --currentColour;
-        currentColour %= (sizeof(colours) / sizeof(colours[0]));
-    }
+void shiftColour() {
+    ++currentColour;
+    currentColour %= (sizeof(colours) / sizeof(colours[0]));
 }
 
 void resetGame() {
