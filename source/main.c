@@ -8,12 +8,12 @@
 #include <wiiuse/wpad.h>
 
 #include "font131.h"
+#include "score.h"
 
 #define BODY_COLOUR 0xC71012FF
 #define EYES_COLOUR 0x95CADCFF
 #define GRAVITY 1
 #define JUMP_SPEED 15
-#define SAVE_FN "sd:/imposter.sav"
 
 typedef struct {
     int x;
@@ -33,10 +33,6 @@ int scrHeight;
 
 // Font
 GRRLIB_bytemapFont *font;
-int score = 0;
-int hs = 0;
-char scoreS[18];
-char scoreHS[18];
 
 // For blocks to jump over
 Block blocks[10];
@@ -46,9 +42,6 @@ bool pastBlock;
 Point imposterPos;
 int velocity;
 bool dead = false;
-
-void updateScore(int score, int hs);
-void setSave(uint score);
 
 void resetBlocks(Block *blocks, int arrSize) {
     for (int i = 0; i < arrSize; i++) {
@@ -114,8 +107,7 @@ void drawBlocks() {
         //    printf("pastBlock: %d", pastBlock);
 
         if (blocks[i].xpos < imposterPos.x && pastBlock) {
-            updateScore(++score, hs);
-            printf("Score: %d", score);
+            incrementScore();
             pastBlock = false;
         }
     }
@@ -124,8 +116,8 @@ void drawBlocks() {
 void gameplay() {
     GRRLIB_FillScreen(0x000000FF); // Clear the screen
 
-    GRRLIB_PrintBMF(10, 10, font, scoreS);
-    GRRLIB_PrintBMF(10, 32, font, scoreHS);
+    GRRLIB_PrintBMF(10, 10, font, getScoreS(false));
+    GRRLIB_PrintBMF(10, 32, font, getScoreS(true));
 
     // If touching floor
     if (imposterPos.y + scrHeight / 6 >= (scrHeight / 6) * 5) {
@@ -148,45 +140,6 @@ void gameplay() {
     // Floor
     GRRLIB_Rectangle(0, (scrHeight / 6) * 5, scrWidth, (scrHeight / 6) * 5,
                      0xBABABAFF, true);
-}
-
-void initSave() {
-    // Check if save exists if not create it
-    if (access(SAVE_FN, F_OK) < 0) {
-        printf("Could not open / create save file, creating it.");
-        setSave(0);
-        updateScore(0, 0);
-    } else {
-        // Load score from file
-        FILE *saveFile = fopen(SAVE_FN, "rb");
-        printf("Opened save file at %p", saveFile);
-        uint *hs_temp = malloc(sizeof(uint));
-        fread(hs_temp, sizeof(uint), 1, saveFile);
-        updateScore(0, *hs_temp);
-        printf("Loaded HS: %d", hs);
-        free(hs_temp);
-        fclose(saveFile);
-    }
-}
-
-void setSave(uint score) {
-    FILE *saveFile = fopen(SAVE_FN, "wb");
-    if (saveFile != NULL)
-        printf("Opened save file for writing at %p", saveFile);
-    if (fwrite(&score, sizeof(uint), 1, saveFile) == 0)
-        printf("Error writing to save file.");
-    else
-        printf("Wrote score %d to save file", score);
-
-    fclose(saveFile);
-}
-
-void updateScore(int new_score, int new_hs) {
-    score = new_score;
-    sprintf(scoreS, "SCORE %d", score);
-
-    hs = new_hs;
-    sprintf(scoreHS, "BEST  %d", hs);
 }
 
 // Main entry point
@@ -231,19 +184,12 @@ int main() {
             break;
         // Reset game after death
         if (pressed & WPAD_BUTTON_B && dead) {
-            printf("HS pre death: %d", hs);
             // Make player alive again
             dead = !dead;
 
             resetBlocks(blocks, 4);
-            // Set hs
-            if (score > hs) {
-                updateScore(score, score);
-                setSave(hs);
-            }
-            printf("HS: %d", hs);
-            // Reset score
-            updateScore(0, hs);
+            checkHS();
+            resetScore();
             // Reset blocks
             pastBlock = true;
         }
