@@ -10,7 +10,6 @@
 #include "font131.h"
 #include "score.h"
 
-#define BODY_COLOUR 0xC71012FF
 #define EYES_COLOUR 0x95CADCFF
 #define GRAVITY 1
 #define JUMP_SPEED 15
@@ -42,6 +41,9 @@ bool pastBlock;
 Point imposterPos;
 int velocity;
 bool dead = false;
+int colours[] = {0xC71111FF, 0x132FD2FF, 0x10802EFF,
+                 0xEE55BAFF, 0xF17D0EFF, 0xF6F757FF};
+int currentColour = 0;
 
 void resetBlocks(Block *blocks, int arrSize) {
     for (int i = 0; i < arrSize; i++) {
@@ -133,7 +135,7 @@ void gameplay() {
     // Move main character if jumping
     imposterPos.y += velocity;
     // Draw main imposter
-    drawCrewmate(imposterPos, BODY_COLOUR, dead);
+    drawCrewmate(imposterPos, colours[currentColour], dead);
 
     drawBlocks();
 
@@ -182,6 +184,13 @@ int main() {
         // If home pressed, exit
         if (pressed & WPAD_BUTTON_HOME)
             break;
+        if (pressed & WPAD_BUTTON_PLUS)
+            currentColour =
+                ++currentColour % (sizeof(colours) / sizeof(colours[0]));
+        if (pressed & WPAD_BUTTON_MINUS)
+            currentColour =
+                --currentColour % (sizeof(colours) / sizeof(colours[0]));
+
         // Reset game after death
         if (pressed & WPAD_BUTTON_B && dead) {
             // Make player alive again
