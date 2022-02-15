@@ -6,6 +6,14 @@ Imposter Run for WII
 This is a homebrew Wii game inteded to be similar to the chrome offline dinosaur infinite runner but with **sussy characters**.
 You must also run from the imposter who can be controlled by another person or the AI.
 
+## Controls
+
+| Button         | Function        |
+|--------------- | --------------- |
+| A              | Jump            |
+| B              | Restart         |
+| +              | Change colour   |
+
 ## Technologies
 
 This game is written using:
