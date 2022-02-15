@@ -2,6 +2,10 @@
 #include "gcbool.h"
 #define SAVE_FN "sd:/imposter.sav"
 
+// String representations of score and hs
+extern char scoreS[18];
+extern char scoreHS[18];
+
 // Creates save file if it does not exist
 void initSave();
 
@@ -19,5 +23,3 @@ void resetScore();
 
 // Checks if score is > high score and updates relevant info if so
 void checkHS();
-
-char *getScoreS(BOOL hs);

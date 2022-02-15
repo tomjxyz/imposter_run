@@ -8,10 +8,6 @@
 int score = 0;
 int hs = 0;
 
-// String representations of score and hs
-char scoreS[18];
-char scoreHS[18];
-
 void initSave() {
     // Check if save exists if not create it
     if (access(SAVE_FN, F_OK) < 0) {
@@ -61,13 +57,5 @@ void checkHS() {
     if (score > hs) {
         updateScore(score, score);
         saveHS(hs);
-    }
-}
-
-char *getScoreS(BOOL hs) {
-    if (hs) {
-        return scoreHS;
-    } else {
-        return scoreS;
     }
 }
