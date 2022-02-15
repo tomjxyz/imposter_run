@@ -184,12 +184,14 @@ int main() {
         // If home pressed, exit
         if (pressed & WPAD_BUTTON_HOME)
             break;
-        if (pressed & WPAD_BUTTON_PLUS)
-            currentColour =
-                ++currentColour % (sizeof(colours) / sizeof(colours[0]));
-        if (pressed & WPAD_BUTTON_MINUS)
-            currentColour =
-                --currentColour % (sizeof(colours) / sizeof(colours[0]));
+        if (pressed & WPAD_BUTTON_PLUS) {
+            ++currentColour;
+            currentColour %= (sizeof(colours) / sizeof(colours[0]));
+        }
+        if (pressed & WPAD_BUTTON_MINUS) {
+            --currentColour;
+            currentColour %= (sizeof(colours) / sizeof(colours[0]));
+        }
 
         // Reset game after death
         if (pressed & WPAD_BUTTON_B && dead) {
