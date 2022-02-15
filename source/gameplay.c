@@ -1,6 +1,7 @@
 #include "gameplay.h"
 #include "font131.h"
 #include "score.h"
+#include <stdlib.h>
 // Globals
 
 GRRLIB_bytemapFont *font;
@@ -25,6 +26,7 @@ char scoreHS[18];
 
 // Functions
 void initGameplay() {
+    srand(time(NULL));
     dead = false;
     scrWidth = rmode->fbWidth;
     scrHeight = rmode->efbHeight;
@@ -45,6 +47,7 @@ void resetBlocks(Block *blocks, int arrSize) {
         blocks[i].xpos = scrWidth + blocks[i].width +
                          ((scrWidth + blocks[i].width) / arrSize - 1) * i;
         blocks[i].ypos = ((scrHeight / 6) * 5) - blocks[i].height;
+        randomOffset(&blocks[i]);
     }
 }
 
@@ -56,7 +59,6 @@ void shiftColour() {
 void resetGame() {
     dead = !dead;
     resetBlocks(blocks, 4);
-    checkHS();
     resetScore();
     pastBlock = true;
 }
@@ -93,18 +95,20 @@ void drawCrewmate(Point pos, u32 colour, bool dead) {
 void drawBlocks() {
     // Blocks to jump over
     for (int i = 0; i < 4; i++) {
-        GRRLIB_Rectangle(blocks[i].xpos, blocks[i].ypos, blocks[i].width,
-                         blocks[i].height, 0x969696FF, true);
+        GRRLIB_Rectangle(blocks[i].xpos + blocks[i].offset, blocks[i].ypos,
+                         blocks[i].width, blocks[i].height, 0x969696FF, true);
 
         // If player hits a block
         if (GRRLIB_RectOnRect(imposterPos.x, imposterPos.y, scrHeight / 12,
-                              scrHeight / 6, blocks[i].xpos, blocks[i].ypos,
-                              blocks[i].width, blocks[i].height)) {
+                              scrHeight / 6, blocks[i].xpos + blocks[i].offset,
+                              blocks[i].ypos, blocks[i].width,
+                              blocks[i].height)) {
             dead = true;
+            checkHS();
         }
 
         if (!dead) {
-            if (blocks[i].xpos < 0 - blocks[i].width) {
+            if ((blocks[i].xpos + blocks[i].offset) < 0 - blocks[i].width) {
 
                 blocks[i].xpos = scrWidth;
                 pastBlock = true;
@@ -113,11 +117,16 @@ void drawBlocks() {
         }
         //    printf("pastBlock: %d", pastBlock);
 
-        if (blocks[i].xpos < imposterPos.x && pastBlock) {
+        if ((blocks[i].xpos + blocks[i].offset) < imposterPos.x && pastBlock) {
             incrementScore();
             pastBlock = false;
         }
     }
+}
+
+void randomOffset(Block *b) {
+    b->offset = ((float)rand() / RAND_MAX) * MAX_OFFSET;
+    printf("Set offset for block %p to %d", b, b->offset);
 }
 
 void gameplay() {
